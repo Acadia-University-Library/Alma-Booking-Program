@@ -1,3 +1,4 @@
+![Image of the booking program](screenshot.png)
 # Alma Booking Program
 
 This program was created for booking study rooms, but can also be used for other bookings if desired
