@@ -1,0 +1,5 @@
+# check for overdue bookings and email if any are found
+01,16,31,46 * * * * root /usr/local/bin/php /var/www/automation/check-overdue.php >> /var/log/cron.log 2>&1
+
+# delete bookings that have not been turned to loans 15 minutes after their start time
+15,45 * * * * root /usr/local/bin/php /var/www/automation/remove-late-bookings.php >> /var/log/cron.log 2>&1

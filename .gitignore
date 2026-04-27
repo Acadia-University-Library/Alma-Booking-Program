@@ -1,0 +1,15 @@
+secrets/*
+!secrets/sample.config.php
+php-includes/*
+!php-includes/.gitkeep
+!php-includes/before-content.php.sample
+!php-includes/after-content.php.sample
+!php-includes/style.css.sample
+cache/*
+!cache/.gitkeep
+logs/*
+!logs/.gitkeep
+docker-compose.override.yml
+crontab
+certs/*
+!certs/.gitkeep

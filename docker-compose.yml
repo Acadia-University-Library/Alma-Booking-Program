@@ -1,0 +1,17 @@
+secrets:
+  config:
+    file: secrets/config.php
+
+services:
+  booking:
+    restart: unless-stopped
+    image: booking:latest
+    build:
+      context: .
+    secrets:
+      - source: config
+        target: /var/www/config.php
+        uid: '33'
+        gid: '33'
+    volumes:
+      - ./logs:/var/www/logs:rw

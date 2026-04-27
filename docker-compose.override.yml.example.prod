@@ -1,0 +1,68 @@
+networks:
+  traefik_default:
+
+services:
+  booking:
+    labels:
+      traefik.enable: true
+
+      # middleware to force paths to end in slashes - should be used by containers that use paths instead of subdomains
+      traefik.http.middlewares.add-slash.chain.middlewares: strip-prefix-1,strip-prefix-2
+      traefik.http.middlewares.strip-prefix-1.redirectregex.regex: ^(https?://[^/]+/[a-z0-9_]+)(\?.*)?$$
+      traefik.http.middlewares.strip-prefix-1.redirectregex.replacement: $${1}/$${2}
+      traefik.http.middlewares.strip-prefix-1.redirectregex.permanent: true
+      traefik.http.middlewares.strip-prefix-2.stripprefixregex.regex: /[a-z0-9_]+
+
+      # https middleware
+      traefik.http.middlewares.https-redirect.redirectscheme.permanent: true
+      traefik.http.middlewares.https-redirect.redirectscheme.scheme: https
+      
+      # Custom middleware chain
+      traefik.http.middlewares.booking-custom-request-headers.headers.customrequestheaders.X-Forwarded-Path: /booking
+      traefik.http.middlewares.booking.chain.middlewares: add-slash,booking-custom-request-headers
+
+      # HTTP router
+      traefik.http.routers.booking_http.entrypoints: http
+      traefik.http.routers.booking_http.middlewares: https-redirect
+      traefik.http.routers.booking_http.rule: Host(`example.com`) && PathPrefix(`/booking`)
+      traefik.http.routers.booking_http.service: booking
+
+      # HTTPS router
+      traefik.http.routers.booking_https.entrypoints: https
+      traefik.http.routers.booking_https.middlewares: booking
+      traefik.http.routers.booking_https.rule: Host(`example.com`) && PathPrefix(`/booking`)
+      traefik.http.routers.booking_https.service: booking
+      traefik.http.routers.booking_https.tls: true
+      traefik.http.routers.booking_https.tls.certresolver: resolver
+
+      # Service definition
+      traefik.http.services.booking.loadbalancer.server.port: 80
+    networks:
+      - traefik_default
+
+  # Note that this assumes you don't already have traefik running. If you have a reverse proxy already, you can remove this.
+  traefik:
+    image: traefik:v3.6.13
+    restart: unless-stopped
+    command: >-
+      --api
+      --entryPoints.http.address=:80
+      --entryPoints.http.forwardedHeaders.trustedIPs=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      --entryPoints.https.address=:443
+      --entryPoints.https.forwardedHeaders.trustedIPs=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      --providers.docker=true
+      --providers.docker.exposedByDefault=false
+      --certificatesresolvers.resolver.acme.httpchallenge=true
+      --certificatesresolvers.resolver.acme.httpchallenge.entrypoint=http
+      --certificatesresolvers.resolver.acme.email=admin@example.com
+      --certificatesresolvers.resolver.acme.storage=/acme/acme.json
+    labels:
+      traefik.enable: false
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:z,rw
+      - ./certs:/acme:Z
+    networks:
+      - traefik_default
