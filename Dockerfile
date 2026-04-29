@@ -9,9 +9,12 @@ COPY bootstrap-modified.css /var/www/html/bootstrap-modified.css
 COPY cache /var/www/cache
 COPY automation /var/www/automation
 
-# make cache directory and overdue logs writable by apache
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
+# make cache directory writable by apache
 RUN chmod 770 /var/www/cache && chgrp www-data /var/www/cache
-RUN chmod 770 /var/www/automation/logs && chgrp www-data /var/www/automation/logs
 
 # install production php ini
 RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
@@ -31,4 +34,4 @@ RUN chmod 0644 /etc/cron.d/my-cron
 RUN touch /var/log/cron.log
 
 # start the container with cron and apache running
-CMD service cron start && apache2-foreground
+CMD ["sh", "-c", "service cron start && apache2-foreground"]

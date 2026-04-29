@@ -11,7 +11,5 @@ services:
     secrets:
       - source: config
         target: /var/www/config.php
-        uid: '33'
-        gid: '33'
     volumes:
       - ./logs:/var/www/logs:rw
